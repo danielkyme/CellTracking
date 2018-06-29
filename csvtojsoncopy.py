@@ -4,8 +4,8 @@ import json
 
 def main(argv):
 
-    input_file = '/Applications/CELLTK/df.csv'
-    output_file = '/Applications/CELLTK/output.json'
+    input_file = '/Users/danielkim/Downloads/hela data/hela_set2_test2_df.csv'
+    output_file = '/Users/danielkim/Downloads/hela data/hela_set2_test2_df_output_ezread.json'
     read_csv(input_file, output_file)
 
 csv_rows = []
@@ -15,6 +15,7 @@ def read_csv(file, json_file):
         title = reader.fieldnames
         numcellsstart = []
         numcellsend = []
+        celldiv = []
         numframe = 0
 
         for row in reader:
@@ -39,6 +40,12 @@ def read_csv(file, json_file):
                 finalcells += 1
         finalcells -= 3
 
+        framecopy = csv_rows[0].copy()
+        for key in framecopy.keys():
+            if key == 'object' or key == 'ch' or key == 'frame' or key == 'prop':
+                continue
+            elif framecopy[key] != '':
+                celldiv.append((framecopy[key], '0'))
         # Find immediate Parents
         ind = 1
         while len(csv_rows) >= 2:
@@ -52,6 +59,10 @@ def read_csv(file, json_file):
                         final_dict[key] = curr_dict[key]
                     else:
                         final_dict[key] = final_dict[key] + ', ' + curr_dict[key]
+                    if key == 'object' or key == 'ch' or key == 'frame' or key == 'prop':
+                        continue
+                    else:
+                        celldiv.append((str(int(float(curr_dict[key]))), curr_dict['frame']))
             csv_rows.remove(curr_dict)
 
         csv_copy = csv_rows[0].copy()
@@ -101,6 +112,9 @@ def read_csv(file, json_file):
                         curr_csvrow.insert(0, 'Parent: ' + ', '.join(temp) + ';')
                     csv_rows[0][key] = ''.join(curr_csvrow)
 
+        for (parent, frame) in celldiv:
+            if 'Frame: ' + frame not in csv_rows[0][parent]:
+                csv_rows[0][parent] += '; Frame: ' + frame
         write_json(csv_rows, json_file, initcells, finalcells, totalcells)
         print('Success!')
 
